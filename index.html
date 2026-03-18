@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hankook Motorsports — Social Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#fff;--bg2:#f7f7f7;--bg3:#efefef;--text:#111;--text2:#666;--text3:#aaa;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);--grid:rgba(0,0,0,0.05);--pos:#16a34a;--neg:#dc2626;--ig:#E1306C;--x:#000;}
+@media(prefers-color-scheme:dark){:root{--bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#242424;--text:#eee;--text2:#777;--text3:#444;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.16);--grid:rgba(255,255,255,0.05);--x:#e5e5e5;}}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding:28px 20px 60px;max-width:1100px;margin:0 auto;}
+.topbar{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:24px;}
+.logo{font-size:13px;font-weight:500;}.logo span{color:var(--text2);font-weight:400;}
+.period-tabs{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.ptab{padding:5px 14px;font-size:11px;font-family:'Inter',sans-serif;background:transparent;border:none;color:var(--text2);cursor:pointer;}
+.ptab.on{background:var(--bg2);color:var(--text);font-weight:500;}
+.plat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.plat-head{border:1px solid var(--border);border-radius:11px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.ph-left{display:flex;align-items:center;gap:10px;}
+.ph-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ph-name{font-size:13px;font-weight:500;}.ph-sub{font-size:11px;color:var(--text2);margin-top:1px;}
+.ph-badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;}
+.ph-badge-ig{background:#E1306C18;color:#E1306C;}.ph-badge-x{background:var(--bg3);color:var(--text2);}
+.month-label{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;}
+.kpi-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.kpi-block{border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.kpi-block-head{padding:9px 14px;font-size:10px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;color:var(--text2);}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}.dot-ig{background:#E1306C;}.dot-x{background:var(--x);}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);}
+.kpi{background:var(--bg);padding:13px 12px 11px;}
+.kpi-label{font-size:9px;color:var(--text2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
+.kpi-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--text);line-height:1;}
+.kpi-delta{font-size:10px;margin-top:3px;}
+.pos{color:var(--pos);}.neg{color:var(--neg);}.neu{color:var(--text2);}
+.compare-card{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:10px;}
+.compare-head{padding:9px 14px;font-size:10px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);}
+.cs-row{display:flex;align-items:center;padding:9px 14px;gap:10px;border-bottom:.5px solid var(--border);}
+.cs-row:last-child{border-bottom:none;}
+.cs-label{font-size:11px;color:var(--text2);width:110px;flex-shrink:0;}
+.cs-bars{flex:1;display:flex;flex-direction:column;gap:4px;}
+.cs-bar-row{display:flex;align-items:center;gap:7px;}
+.cs-plat{font-size:9px;width:16px;flex-shrink:0;font-weight:500;}
+.cs-track{flex:1;height:4px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.cs-fill{height:100%;border-radius:3px;}
+.fill-ig{background:#E1306C;}.fill-x{background:var(--x);}
+.cs-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--text);width:70px;text-align:right;flex-shrink:0;}
+.charts-2{display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-bottom:10px;}
+.charts-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+@media(max-width:680px){.kpi-2col,.plat-row,.charts-2,.charts-3{grid-template-columns:1fr;}.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+.panel{background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:16px;}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.panel-title{font-size:12px;font-weight:500;}.panel-sub{font-size:10px;color:var(--text2);}
+.legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);}
+.leg-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.tbl-wrap{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:10px;}
+.tbl-title{padding:9px 14px;font-size:10px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.tbl th{padding:8px 12px;text-align:left;font-size:9px;font-weight:500;color:var(--text2);letter-spacing:.4px;text-transform:uppercase;}
+.tbl th:not(:first-child){text-align:right;}
+.tbl td{padding:8px 12px;border-bottom:.5px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;color:var(--text);}
+.tbl td:first-child{font-family:'Inter',sans-serif;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tbl td:not(:first-child){text-align:right;}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr:hover td{background:var(--bg2);}
+.badge{display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px;margin-left:4px;font-family:'Inter',sans-serif;font-weight:500;}
+.b-fe{background:#f3e8ff;color:#7c3aed;}.b-wrc{background:#dbeafe;color:#1d4ed8;}.b-tx{background:var(--bg3);color:var(--text2);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">Hankook Motorsports <span>/ Social Dashboard · 26년 2월 기준</span></div>
+  <div class="period-tabs">
+    <button class="ptab" onclick="setPeriod(this,'jan')">26년 1월</button>
+    <button class="ptab on" onclick="setPeriod(this,'feb')">26년 2월</button>
+    <button class="ptab" onclick="setPeriod(this,'yoy')">전년 비교</button>
+  </div>
+</div>
+
+<div class="plat-row">
+  <div class="plat-head">
+    <div class="ph-left">
+      <div class="ph-icon" style="background:#E1306C;">📸</div>
+      <div><div class="ph-name">Instagram Motorsports</div><div class="ph-sub">@hankooktire_motorsports</div></div>
+    </div><span class="ph-badge ph-badge-ig">IG</span>
+  </div>
+  <div class="plat-head">
+    <div class="ph-left">
+      <div class="ph-icon" style="background:var(--x);color:#fff;font-weight:700;font-size:13px;font-family:'Inter',sans-serif;">𝕏</div>
+      <div><div class="ph-name">X Motorsports</div><div class="ph-sub">@Hankook_Sport</div></div>
+    </div><span class="ph-badge ph-badge-x">X</span>
+  </div>
+</div>
+
+<!-- FEB VIEW -->
+<div id="view-feb">
+  <div class="month-label">26년 2월 — KPI 요약</div>
+  <div class="kpi-2col">
+    <div class="kpi-block">
+      <div class="kpi-block-head"><span class="dot dot-ig"></span>Instagram · 2월 (19건)</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Reach</div><div class="kpi-val">401K</div><div class="kpi-delta neg">↓ 96.1% 전월</div></div>
+        <div class="kpi"><div class="kpi-label">Interaction</div><div class="kpi-val">27,814</div><div class="kpi-delta neg">↓ 81.5% 전월</div></div>
+        <div class="kpi"><div class="kpi-label">Like</div><div class="kpi-val">26,921</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">Video Views</div><div class="kpi-val">67K</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">E/R avg</div><div class="kpi-val">6.9%</div><div class="kpi-delta pos">↑ 전월대비</div></div>
+      </div>
+    </div>
+    <div class="kpi-block">
+      <div class="kpi-block-head"><span class="dot dot-x"></span>X · 2월 (16건)</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Impression</div><div class="kpi-val">9,678</div><div class="kpi-delta pos">↑ 0.8% 전월</div></div>
+        <div class="kpi"><div class="kpi-label">Interaction</div><div class="kpi-val">1,193</div><div class="kpi-delta pos">↑ 84.4% 전월</div></div>
+        <div class="kpi"><div class="kpi-label">Like</div><div class="kpi-val">360</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">Repost</div><div class="kpi-val">45</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">댓글</div><div class="kpi-val">3</div><div class="kpi-delta neu">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="compare-card">
+    <div class="compare-head">플랫폼 비교 · 26년 2월</div>
+    <div class="cs-row"><div class="cs-label">Interaction</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">IG</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:100%;"></div></div><span class="cs-val">27,814</span></div><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">X</span><div class="cs-track"><div class="cs-fill fill-x" style="width:4.3%;"></div></div><span class="cs-val">1,193</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">게시물 수</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">IG</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:100%;"></div></div><span class="cs-val">19건</span></div><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">X</span><div class="cs-track"><div class="cs-fill fill-x" style="width:84%;"></div></div><span class="cs-val">16건</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">Like</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">IG</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:100%;"></div></div><span class="cs-val">26,921</span></div><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">X</span><div class="cs-track"><div class="cs-fill fill-x" style="width:1.3%;"></div></div><span class="cs-val">360</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">공유 / Repost</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">IG</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:100%;"></div></div><span class="cs-val">759 (공유)</span></div><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">X</span><div class="cs-track"><div class="cs-fill fill-x" style="width:5.9%;"></div></div><span class="cs-val">45 (RT)</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">Profile Activity</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">IG</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:100%;"></div></div><span class="cs-val">21 (Follow)</span></div><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">X</span><div class="cs-track"><div class="cs-fill fill-x" style="width:257%;max-width:100%;"></div></div><span class="cs-val">54</span></div></div></div>
+  </div>
+
+  <div class="charts-2">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">월별 Interaction 추이</span><span class="panel-sub">25년 vs 26년 · 1~2월</span></div>
+      <div style="position:relative;height:190px;"><canvas id="c-trend"></canvas></div>
+      <div class="legend"><span class="leg"><span class="leg-sq" style="background:#E1306C;"></span>IG 2026</span><span class="leg"><span class="leg-sq" style="background:#E1306C55;"></span>IG 2025</span><span class="leg"><span class="leg-sq" style="background:var(--x);"></span>X 2026</span><span class="leg"><span class="leg-sq" style="background:var(--text3);"></span>X 2025</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">IG Pillar 구성</span><span class="panel-sub">26년 2월 · 19건</span></div>
+      <div style="position:relative;height:150px;"><canvas id="c-pillar"></canvas></div>
+      <div class="legend" style="margin-top:8px;"><span class="leg"><span class="leg-sq" style="background:#E1306C;"></span>Formula E 14건</span><span class="leg"><span class="leg-sq" style="background:#888;"></span>WRC 5건</span></div>
+    </div>
+  </div>
+
+  <div class="charts-3">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">IG 인터랙션 구성</span><span class="panel-sub">26년 2월</span></div>
+      <div style="position:relative;height:150px;"><canvas id="c-ig-comp"></canvas></div>
+      <div class="legend" style="margin-top:6px;"><span class="leg"><span class="leg-sq" style="background:#E1306C;"></span>Like 26,921</span><span class="leg"><span class="leg-sq" style="background:#E1306C99;"></span>공유 759</span><span class="leg"><span class="leg-sq" style="background:#E1306C55;"></span>댓글 86</span><span class="leg"><span class="leg-sq" style="background:#E1306C22;"></span>Save 48</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">X 인터랙션 구성</span><span class="panel-sub">26년 2월</span></div>
+      <div style="position:relative;height:150px;"><canvas id="c-x-comp"></canvas></div>
+      <div class="legend" style="margin-top:6px;"><span class="leg"><span class="leg-sq" style="background:var(--x);"></span>Engagement 785</span><span class="leg"><span class="leg-sq" style="background:var(--text2);"></span>Like 360</span><span class="leg"><span class="leg-sq" style="background:var(--text3);"></span>Repost 45</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">X Top 게시물</span><span class="panel-sub">Impression 기준 · 26년 2월</span></div>
+      <div style="position:relative;height:150px;"><canvas id="c-x-top"></canvas></div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-title"><span class="dot dot-ig"></span>Instagram · 26년 2월 게시물 (19건)</div>
+    <table class="tbl">
+      <thead><tr><th>콘텐츠</th><th>Reach</th><th>Like</th><th>댓글</th><th>공유</th><th>Save</th><th>Interaction</th><th>E/R</th></tr></thead>
+      <tbody id="ig-feb-body"></tbody>
+    </table>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-title"><span class="dot dot-x"></span>X · 26년 2월 게시물 (16건)</div>
+    <table class="tbl">
+      <thead><tr><th>콘텐츠</th><th>Impression</th><th>Like</th><th>댓글</th><th>Repost</th><th>Engagement</th><th>Profile</th></tr></thead>
+      <tbody id="x-feb-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- JAN VIEW -->
+<div id="view-jan" style="display:none;">
+  <div class="month-label">26년 1월 — KPI 요약</div>
+  <div class="kpi-2col">
+    <div class="kpi-block">
+      <div class="kpi-block-head"><span class="dot dot-ig"></span>Instagram · 1월 (19건)</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Impression</div><div class="kpi-val">11.1M</div><div class="kpi-delta neu">광고 포함</div></div>
+        <div class="kpi"><div class="kpi-label">Reach</div><div class="kpi-val">10.3M</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">Interaction</div><div class="kpi-val">150,536</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">Video Views</div><div class="kpi-val">7.7M</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">광고비</div><div class="kpi-val">11M</div><div class="kpi-delta neu">₩</div></div>
+      </div>
+    </div>
+    <div class="kpi-block">
+      <div class="kpi-block-head"><span class="dot dot-x"></span>X · 1월 (19건)</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Impression</div><div class="kpi-val">9,599</div><div class="kpi-delta neg">↓ 71.5% YoY</div></div>
+        <div class="kpi"><div class="kpi-label">Interaction</div><div class="kpi-val">907</div><div class="kpi-delta neg">↓ 28.7% YoY</div></div>
+        <div class="kpi"><div class="kpi-label">Like</div><div class="kpi-val">218</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">Repost</div><div class="kpi-val">36</div><div class="kpi-delta neu">—</div></div>
+        <div class="kpi"><div class="kpi-label">댓글</div><div class="kpi-val">6</div><div class="kpi-delta neu">—</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="charts-2">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">IG Top 게시물 · Reach</span><span class="panel-sub">26년 1월</span></div>
+      <div style="position:relative;height:200px;"><canvas id="c-ig-jan-top"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">X Top 게시물 · Impression</span><span class="panel-sub">26년 1월</span></div>
+      <div style="position:relative;height:200px;"><canvas id="c-x-jan-top"></canvas></div>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-title"><span class="dot dot-ig"></span>Instagram · 26년 1월 게시물 (19건)</div>
+    <table class="tbl">
+      <thead><tr><th>콘텐츠</th><th>Reach</th><th>Like</th><th>댓글</th><th>공유</th><th>Save</th><th>Interaction</th><th>E/R</th></tr></thead>
+      <tbody id="ig-jan-body"></tbody>
+    </table>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-title"><span class="dot dot-x"></span>X · 26년 1월 게시물 (19건)</div>
+    <table class="tbl">
+      <thead><tr><th>콘텐츠</th><th>Impression</th><th>Like</th><th>댓글</th><th>Repost</th><th>Engagement</th></tr></thead>
+      <tbody id="x-jan-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- YOY VIEW -->
+<div id="view-yoy" style="display:none;">
+  <div class="month-label">전년 대비 증감률 (26년 vs 25년)</div>
+  <div class="charts-2">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">IG Interaction · YoY</span><span class="panel-sub">25년 vs 26년</span></div>
+      <div style="position:relative;height:200px;"><canvas id="c-ig-yoy"></canvas></div>
+      <div class="legend"><span class="leg"><span class="leg-sq" style="background:#E1306C;"></span>2026</span><span class="leg"><span class="leg-sq" style="background:#E1306C55;"></span>2025</span></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">X Interaction · YoY</span><span class="panel-sub">25년 vs 26년</span></div>
+      <div style="position:relative;height:200px;"><canvas id="c-x-yoy"></canvas></div>
+      <div class="legend"><span class="leg"><span class="leg-sq" style="background:var(--x);"></span>2026</span><span class="leg"><span class="leg-sq" style="background:var(--text3);"></span>2025</span></div>
+    </div>
+  </div>
+  <div class="compare-card">
+    <div class="compare-head">YoY 증감률 요약 (엑셀 기준)</div>
+    <div class="cs-row"><div class="cs-label">IG Interaction 1월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">26</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:31%;"></div></div><span class="cs-val neg">↓ 69.0%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">IG Interaction 2월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">26</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:5.6%;"></div></div><span class="cs-val neg">↓ 94.4%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">IG Reach 1월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">26</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:100%;"></div></div><span class="cs-val pos">+6.6%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">IG Reach 2월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:#E1306C;">26</span><div class="cs-track"><div class="cs-fill fill-ig" style="width:4%;"></div></div><span class="cs-val neg">↓ 96.0%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">X Impression 1월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">26</span><div class="cs-track"><div class="cs-fill fill-x" style="width:28.5%;"></div></div><span class="cs-val neg">↓ 71.5%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">X Impression 2월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">26</span><div class="cs-track"><div class="cs-fill fill-x" style="width:83.2%;"></div></div><span class="cs-val neg">↓ 16.8%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">X Interaction 1월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">26</span><div class="cs-track"><div class="cs-fill fill-x" style="width:71.3%;"></div></div><span class="cs-val neg">↓ 28.7%</span></div></div></div>
+    <div class="cs-row"><div class="cs-label">X Interaction 2월</div><div class="cs-bars"><div class="cs-bar-row"><span class="cs-plat" style="color:var(--x);">26</span><div class="cs-track"><div class="cs-fill fill-x" style="width:100%;"></div></div><span class="cs-val pos">+174.3%</span></div></div></div>
+  </div>
+</div>
+
+<script>
+const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+const IG='#E1306C', X=isDark?'#e5e5e5':'#111';
+const GRID=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)', TICK=isDark?'#555':'#aaa';
+const TIP={backgroundColor:isDark?'#1a1a1a':'#fff',titleColor:isDark?'#eee':'#111',bodyColor:isDark?'#888':'#555',borderColor:isDark?'#333':'#e5e5e5',borderWidth:1,padding:8};
+
+function setPeriod(btn,view){
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  ['feb','jan','yoy'].forEach(v=>document.getElementById('view-'+v).style.display=v===view?'':'none');
+  if(view==='jan')initJan();if(view==='yoy')initYoy();
+}
+
+// IG Feb data
+const igFeb=[
+  ['FE R3 MIAMI Result','b-fe',1737,66,1,2,0,71,'4.1%'],
+  ['FE R3 MIAMI Booth 당첨자','b-fe',3471,154,5,3,1,168,'4.8%'],
+  ['FE R3 MIAMI Max preparing','b-fe',10702,319,4,18,5,357,'3.3%'],
+  ['WRC SWEDEN Tire Info','b-wrc',5535,122,2,12,2,139,'2.5%'],
+  ['officialwrc 공동작업자 #1','b-wrc',216701,17278,33,457,0,17768,'8.2%'],
+  ['FE Jeddah Booth Event','b-fe',1666,10,0,0,0,10,'0.6%'],
+  ['WRC SWEDEN Upcoming','b-wrc',3010,84,1,4,2,90,'3.0%'],
+  ['officialwrc 공동작업자 #2','b-wrc',80325,4793,10,120,0,4923,'6.1%'],
+  ['WRC SWEDEN Preview Video','b-wrc',2044,71,2,5,0,79,'3.9%'],
+  ['FE SA Upcoming D-1','b-fe',1897,36,1,0,0,38,'2.0%'],
+  ['FE SA Highlight #1','b-fe',2135,54,3,15,4,73,'3.4%'],
+  ['FE SA Highlight #2','b-fe',2110,75,5,9,1,90,'4.3%'],
+  ['FE SA Highlight #3','b-fe',14923,109,3,14,0,132,'0.9%'],
+  ['fiaformulae 공동작업자 #1','b-fe',39285,3328,8,63,3,3399,'8.7%'],
+  ['WRC SWEDEN Result','b-wrc',1925,59,1,1,0,62,'3.2%'],
+  ['FE SA Result','b-fe',2270,106,1,10,1,117,'5.2%'],
+  ['FE Jeddah Booth 당첨자','b-fe',1974,68,4,11,1,86,'4.4%'],
+  ['WRC SWEDEN Highlight','b-wrc',7801,72,1,10,1,86,'1.1%'],
+  ['Fan Engagement Content','b-wrc',1582,117,1,5,0,126,'8.0%'],
+];
+const body=document.getElementById('ig-feb-body');
+igFeb.forEach(r=>{
+  const short=r[0].length>28?r[0].slice(0,28)+'…':r[0];
+  body.innerHTML+=`<tr><td title="${r[0]}">${short}<span class="badge ${r[1]}">${r[1]==='b-fe'?'FE':'WRC'}</span></td><td>${r[2].toLocaleString()}</td><td>${r[3].toLocaleString()}</td><td>${r[4]}</td><td>${r[5].toLocaleString()}</td><td>${r[6]}</td><td>${r[7].toLocaleString()}</td><td>${r[8]}</td></tr>`;
+});
+
+// X Feb data
+const xFeb=[
+  ['FE R3 MIAMI Result','b-fe',230,4,0,0,25,0],
+  ['FE R3 MIAMI Booth 당첨자','b-fe',185,2,0,0,24,1],
+  ['FE R3 MIAMI Max preparing','b-fe',265,4,0,1,14,2],
+  ['WRC SWEDEN Tire Info','b-wrc',4027,137,1,21,398,31],
+  ['FE Jeddah Booth Event','b-fe',243,3,0,1,12,2],
+  ['WRC SWEDEN Upcoming','b-wrc',1319,70,0,8,214,5],
+  ['WRC/FE Preview','b-wrc',189,3,0,0,16,0],
+  ['FE SA Upcoming Video','b-fe',307,13,0,3,37,1],
+  ['FE SA Highlight #1','b-fe',203,4,1,0,14,2],
+  ['FE SA Highlight #2','b-fe',201,9,0,2,26,1],
+  ['FE SA Highlight #3','b-fe',256,3,0,0,9,2],
+  ['FE SA Result','b-fe',163,3,1,0,20,1],
+  ['WRC SWEDEN Result','b-wrc',1034,65,0,5,235,3],
+  ['FE Jeddah Booth 당첨자','b-fe',150,1,0,0,12,2],
+  ['WRC SWEDEN Highlight','b-wrc',421,21,0,3,50,1],
+  ['Fan Engagement Content','b-wrc',485,18,0,1,87,0],
+];
+const xbody=document.getElementById('x-feb-body');
+xFeb.forEach(r=>{
+  const short=r[0].length>28?r[0].slice(0,28)+'…':r[0];
+  xbody.innerHTML+=`<tr><td title="${r[0]}">${short}<span class="badge ${r[1]}">${r[1]==='b-fe'?'FE':'WRC'}</span></td><td>${r[2].toLocaleString()}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td></tr>`;
+});
+
+// Charts
+new Chart(document.getElementById('c-trend'),{type:'bar',data:{labels:['1월','2월'],datasets:[
+  {label:'IG 2026',data:[150536,27814],backgroundColor:IG,borderRadius:4,barPercentage:.3},
+  {label:'IG 2025',data:[485612,492913],backgroundColor:IG+'44',borderRadius:4,barPercentage:.3},
+  {label:'X 2026',data:[907,1193],backgroundColor:X,borderRadius:4,barPercentage:.3},
+  {label:'X 2025',data:[2016,740],backgroundColor:isDark?'#444':'#ccc',borderRadius:4,barPercentage:.3},
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TIP},
+scales:{x:{grid:{display:false},ticks:{color:TICK,font:{size:9}}},y:{grid:{color:GRID},ticks:{color:TICK,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}}}});
+
+new Chart(document.getElementById('c-pillar'),{type:'doughnut',data:{labels:['Formula E','WRC'],datasets:[{data:[14,5],backgroundColor:[IG,isDark?'#555':'#aaa'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:TIP}}});
+
+new Chart(document.getElementById('c-ig-comp'),{type:'doughnut',data:{labels:['Like','공유','댓글','Save'],datasets:[{data:[26921,759,86,48],backgroundColor:[IG,IG+'99',IG+'55',IG+'22'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:TIP}}});
+
+new Chart(document.getElementById('c-x-comp'),{type:'doughnut',data:{labels:['Engagement','Like','Repost','댓글'],datasets:[{data:[785,360,45,3],backgroundColor:[X,isDark?'#aaa':'#555',isDark?'#666':'#999',isDark?'#333':'#ddd'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:TIP}}});
+
+new Chart(document.getElementById('c-x-top'),{type:'bar',indexAxis:'y',data:{labels:['WRC SWEDEN Tire Info','WRC SWEDEN Upcoming','Fan Engagement','WRC SWEDEN Highlight','FE Jeddah Upcoming'],datasets:[{label:'Impression',data:[4027,1319,485,421,307],backgroundColor:X,borderRadius:3,barPercentage:.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TIP},scales:{x:{grid:{color:GRID},ticks:{color:TICK,font:{size:9}}},y:{grid:{display:false},ticks:{color:TICK,font:{size:8}}}}}});
+
+let janInited=false;
+function initJan(){
+  if(janInited)return;janInited=true;
+  // Jan IG table
+  const igJan=[
+    ['FE Mexico Booth Event','b-fe',3926211,401,1,12,12,426,'1.0%'],
+    ['FE Mexico Preview Video','b-fe',601572,19410,12,69,110,19601,'1.2%'],
+    ['FE Mexico Upcoming D-1','b-fe',222983,32490,122,23,164,32799,'0.16%'],
+    ['FE Mexico Highlight #1','b-fe',610311,26671,6,47,54,26778,'1.3%'],
+    ['FE Mexico Result','b-fe',2857629,553,2,6,3,564,'0.0%'],
+    ['FE Mexico Booth 당첨자','b-fe',3434,201,5,13,4,223,'6.5%'],
+    ['FE Mexico Highlights Ver','b-fe',812191,5096,17,24,21,5158,'1.2%'],
+    ['WRC Season Calendar','b-wrc',255339,28585,237,203,760,29785,'0.13%'],
+    ['WRC Calendar Video','b-wrc',305030,10922,4,46,70,11042,'1.3%'],
+    ['WRC Monaco Tire Info','b-wrc',235314,659,2,26,15,702,'1.2%'],
+    ['WRC Monaco Upcoming D-1','b-wrc',171326,16342,21,41,72,16476,'9.6%'],
+    ['FE Tire Focus Highlight','b-fe',276790,6420,4,16,12,6452,'1.4%'],
+    ['WRC Monaco Result','b-wrc',1862,88,1,3,1,93,'5.0%'],
+    ['WRC Monaco Highlight','b-wrc',1714,48,1,6,2,57,'1.6%'],
+    ['FE S12 Moment Highlight','b-fe',3072,176,4,13,8,201,'1.7%'],
+    ['FE Miami Booth Event','b-fe',1231,25,1,3,0,29,'1.6%'],
+    ['FE Miami Highlight #1','b-fe',2027,44,1,1,1,47,'1.6%'],
+    ['FE Miami Upcoming D-1','b-fe',1452,47,1,5,0,53,'3.7%'],
+    ['FE Miami Highlight #2','b-fe',1311,44,2,3,1,50,'1.7%'],
+  ];
+  const ib=document.getElementById('ig-jan-body');
+  igJan.forEach(r=>{const s=r[0].length>28?r[0].slice(0,28)+'…':r[0];ib.innerHTML+=`<tr><td title="${r[0]}">${s}<span class="badge ${r[1]}">${r[1]==='b-fe'?'FE':'WRC'}</span></td><td>${r[2].toLocaleString()}</td><td>${r[3].toLocaleString()}</td><td>${r[4]}</td><td>${r[5].toLocaleString()}</td><td>${r[6]}</td><td>${r[7].toLocaleString()}</td><td>${r[8]}</td></tr>`;});
+
+  const xJan=[
+    ['FE #ThrowbackThursday','b-fe',1380,15,0,2,44],
+    ['WRC 스폰서쉽 뉴스','b-wrc',1877,21,0,8,190],
+    ['FE Booth Event 사전티징','b-fe',858,8,0,3,29],
+    ['FE Mexico Upcoming','b-fe',1066,9,0,1,33],
+    ['WRC 협약식 영상','b-wrc',1287,24,3,12,90],
+    ['FE 부스 이벤트 당첨자','b-fe',770,5,0,1,41],
+    ['WRC Tire Promo','b-wrc',8638,105,1,29,489],
+    ['WRC Monaco Upcoming D-1','b-wrc',1595,30,1,9,95],
+    ['WRC Monaco Result','b-wrc',15836,178,0,26,991],
+    ['FE #FastFriday','b-fe',332,7,0,2,14],
+    ['FE Mexico R2 Booth','b-fe',264,2,0,0,9],
+    ['FE Mexico Preview','b-fe',323,4,0,0,16],
+    ['FE Mexico Upcoming D-1','b-fe',413,9,0,1,30],
+    ['FE Mexico Highlight #1','b-fe',251,5,0,0,14],
+    ['FE Mexico Result','b-fe',268,3,0,0,22],
+    ['FE Mexico Booth 당첨자','b-fe',226,2,0,1,13],
+    ['FE Mexico Highlights Ver','b-fe',199,3,0,0,14],
+    ['WRC Season Calendar','b-wrc',325,8,0,2,35],
+    ['WRC Calendar Video','b-wrc',287,2,0,1,10],
+  ];
+  const xb=document.getElementById('x-jan-body');
+  xJan.forEach(r=>{const s=r[0].length>28?r[0].slice(0,28)+'…':r[0];xb.innerHTML+=`<tr><td title="${r[0]}">${s}<span class="badge ${r[1]}">${r[1]==='b-fe'?'FE':'WRC'}</span></td><td>${r[2].toLocaleString()}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td></tr>`;});
+
+  new Chart(document.getElementById('c-ig-jan-top'),{type:'bar',indexAxis:'y',data:{labels:['FE Mexico Booth','FE Mexico Result','FE Mexico Highlights','FE Mexico Preview','WRC Calendar Video'],datasets:[{label:'Reach',data:[3926211,2857629,812191,601572,305030],backgroundColor:IG,borderRadius:3,barPercentage:.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TIP},scales:{x:{grid:{color:GRID},ticks:{color:TICK,font:{size:9},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v}},y:{grid:{display:false},ticks:{color:TICK,font:{size:8}}}}}});
+  new Chart(document.getElementById('c-x-jan-top'),{type:'bar',indexAxis:'y',data:{labels:['WRC Monaco Result','WRC Tire Promo','WRC 협약식','WRC Monaco Upcoming','WRC 스폰서쉽'],datasets:[{label:'Impression',data:[15836,8638,1287,1595,1877],backgroundColor:X,borderRadius:3,barPercentage:.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TIP},scales:{x:{grid:{color:GRID},ticks:{color:TICK,font:{size:9}}},y:{grid:{display:false},ticks:{color:TICK,font:{size:8}}}}}});
+}
+
+let yoyInited=false;
+function initYoy(){
+  if(yoyInited)return;yoyInited=true;
+  new Chart(document.getElementById('c-ig-yoy'),{type:'bar',data:{labels:['1월 Interaction','2월 Interaction','1월 Reach','2월 Reach'],datasets:[
+    {label:'2026',data:[150536,27814,10290799,401093],backgroundColor:IG,borderRadius:4,barPercentage:.4},
+    {label:'2025',data:[485612,492913,10029061,10029061],backgroundColor:IG+'44',borderRadius:4,barPercentage:.4},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TIP},scales:{x:{grid:{display:false},ticks:{color:TICK,font:{size:9}}},y:{grid:{color:GRID},ticks:{color:TICK,font:{size:9},callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'K':v}}}}});
+  new Chart(document.getElementById('c-x-yoy'),{type:'bar',data:{labels:['1월 Impression','2월 Impression','1월 Interaction','2월 Interaction'],datasets:[
+    {label:'2026',data:[9599,9678,907,1193],backgroundColor:X,borderRadius:4,barPercentage:.4},
+    {label:'2025',data:[33639,11631,2016,740],backgroundColor:isDark?'#444':'#ccc',borderRadius:4,barPercentage:.4},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TIP},scales:{x:{grid:{display:false},ticks:{color:TICK,font:{size:9}}},y:{grid:{color:GRID},ticks:{color:TICK,font:{size:9}}}}}});
+}
+</script>
+</body>
+</html>
